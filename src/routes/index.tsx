@@ -73,6 +73,7 @@ function Nav() {
           <a href="#experiencias" className="hover:text-sand-700 transition-colors">Experiencias</a>
           <a href="#galeria" className="hover:text-sand-700 transition-colors">Galería</a>
           <a href="#referidos" className="hover:text-sand-700 transition-colors">Referidos</a>
+          <Link to="/admin" className="hover:text-sand-700 transition-colors">Admin</Link>
         </div>
         <button className="bg-sand-700 px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-sand-50 transition-all hover:brightness-110 active:scale-[0.98]">
           Reservar
