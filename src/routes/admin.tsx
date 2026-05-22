@@ -176,7 +176,7 @@ function Dashboard({ terrazas, reservas }: { terrazas: Terraza[]; reservas: Rese
               </div>
               <div className="h-2 w-full bg-surface">
                 <div
-                  className={`h-full ${i === 0 ? "bg-sand-700" : i === ranking.length - 1 ? "bg-sand-200" : "bg-sand-400"}`}
+                  className={`h-full ${i === 0 ? "bg-sand-700" : i === ranking.length - 1 ? "bg-sand-200" : "bg-sand-700/60"}`}
                   style={{ width: `${(r.rentabilidad / maxRent) * 100}%` }}
                 />
               </div>
