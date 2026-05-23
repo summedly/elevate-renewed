@@ -58,12 +58,84 @@ const terrazasIniciales: Terraza[] = [
   { id: 4, nombre: "Rooftop Premium CDMX", ubicacion: "Polanco, CDMX", precio: 6200, capacidad: 20, ocupacion: 88, ingresos: 163680, costos: 41000, rating: 5.0, activa: true, img: terraza3 },
 ];
 
-type Tab = "reservas" | "catalogo" | "dashboard";
+type Tab = "reservas" | "catalogo" | "roles" | "dashboard";
+
+type RolId = "superadmin" | "operaciones" | "finanzas" | "soporte" | "lectura";
+
+interface Rol {
+  id: RolId;
+  nombre: string;
+  descripcion: string;
+  permisos: string[];
+}
+
+interface Usuario {
+  id: string;
+  nombre: string;
+  email: string;
+  rol: RolId;
+  activo: boolean;
+  ultimoAcceso: string;
+}
+
+const PERMISOS_DISPONIBLES = [
+  "Ver dashboard",
+  "Gestionar reservas",
+  "Editar catálogo",
+  "Crear terrazas",
+  "Gestionar usuarios",
+  "Ver finanzas",
+  "Exportar reportes",
+  "Atender soporte",
+] as const;
+
+const rolesIniciales: Rol[] = [
+  {
+    id: "superadmin",
+    nombre: "Super Admin",
+    descripcion: "Acceso total al sistema, incluyendo gestión de roles y usuarios.",
+    permisos: [...PERMISOS_DISPONIBLES],
+  },
+  {
+    id: "operaciones",
+    nombre: "Operaciones",
+    descripcion: "Gestiona reservas y catálogo del día a día.",
+    permisos: ["Ver dashboard", "Gestionar reservas", "Editar catálogo"],
+  },
+  {
+    id: "finanzas",
+    nombre: "Finanzas",
+    descripcion: "Acceso a dashboards, ingresos y exportación de reportes.",
+    permisos: ["Ver dashboard", "Ver finanzas", "Exportar reportes"],
+  },
+  {
+    id: "soporte",
+    nombre: "Soporte",
+    descripcion: "Atiende huéspedes y consulta reservas.",
+    permisos: ["Gestionar reservas", "Atender soporte"],
+  },
+  {
+    id: "lectura",
+    nombre: "Solo lectura",
+    descripcion: "Visualiza información sin permisos de edición.",
+    permisos: ["Ver dashboard"],
+  },
+];
+
+const usuariosIniciales: Usuario[] = [
+  { id: "u-001", nombre: "Sofía Navarro", email: "sofia@lux.mx", rol: "superadmin", activo: true, ultimoAcceso: "Hace 12 min" },
+  { id: "u-002", nombre: "Mateo Linares", email: "mateo@lux.mx", rol: "operaciones", activo: true, ultimoAcceso: "Hace 2 h" },
+  { id: "u-003", nombre: "Renata Ortiz", email: "renata@lux.mx", rol: "finanzas", activo: true, ultimoAcceso: "Ayer" },
+  { id: "u-004", nombre: "Iván Pacheco", email: "ivan@lux.mx", rol: "soporte", activo: true, ultimoAcceso: "Hace 30 min" },
+  { id: "u-005", nombre: "Camila Vega", email: "camila@lux.mx", rol: "lectura", activo: false, ultimoAcceso: "Hace 6 días" },
+];
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [reservas, setReservas] = useState<Reserva[]>(reservasIniciales);
   const [terrazas, setTerrazas] = useState<Terraza[]>(terrazasIniciales);
+  const [roles, setRoles] = useState<Rol[]>(rolesIniciales);
+  const [usuarios, setUsuarios] = useState<Usuario[]>(usuariosIniciales);
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
