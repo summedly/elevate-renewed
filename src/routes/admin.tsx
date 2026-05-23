@@ -58,7 +58,7 @@ const terrazasIniciales: Terraza[] = [
   { id: 4, nombre: "Rooftop Premium CDMX", ubicacion: "Polanco, CDMX", precio: 6200, capacidad: 20, ocupacion: 88, ingresos: 163680, costos: 41000, rating: 5.0, activa: true, img: terraza3 },
 ];
 
-type Tab = "reservas" | "catalogo" | "roles" | "dashboard";
+type Tab = "reservas" | "catalogo" | "roles" | "redes" | "dashboard";
 
 type RolId = "superadmin" | "operaciones" | "finanzas" | "soporte" | "lectura";
 
