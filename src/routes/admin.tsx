@@ -158,6 +158,7 @@ function AdminPage() {
             { id: "reservas", label: "Reservas" },
             { id: "catalogo", label: "Catálogo" },
             { id: "roles", label: "Roles y usuarios" },
+            { id: "redes", label: "Redes sociales" },
           ] as { id: Tab; label: string }[]).map((t) => (
             <button
               key={t.id}
@@ -185,6 +186,7 @@ function AdminPage() {
             setUsuarios={setUsuarios}
           />
         )}
+        {tab === "redes" && <RedesSociales terrazas={terrazas} />}
       </main>
     </div>
   );
