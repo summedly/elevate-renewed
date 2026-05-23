@@ -157,6 +157,7 @@ function AdminPage() {
             { id: "dashboard", label: "Dashboard" },
             { id: "reservas", label: "Reservas" },
             { id: "catalogo", label: "Catálogo" },
+            { id: "roles", label: "Roles y usuarios" },
           ] as { id: Tab; label: string }[]).map((t) => (
             <button
               key={t.id}
@@ -176,6 +177,14 @@ function AdminPage() {
         {tab === "dashboard" && <Dashboard terrazas={terrazas} reservas={reservas} />}
         {tab === "reservas" && <Reservas reservas={reservas} setReservas={setReservas} />}
         {tab === "catalogo" && <Catalogo terrazas={terrazas} setTerrazas={setTerrazas} />}
+        {tab === "roles" && (
+          <RolesUsuarios
+            roles={roles}
+            setRoles={setRoles}
+            usuarios={usuarios}
+            setUsuarios={setUsuarios}
+          />
+        )}
       </main>
     </div>
   );
