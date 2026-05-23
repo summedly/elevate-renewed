@@ -58,12 +58,84 @@ const terrazasIniciales: Terraza[] = [
   { id: 4, nombre: "Rooftop Premium CDMX", ubicacion: "Polanco, CDMX", precio: 6200, capacidad: 20, ocupacion: 88, ingresos: 163680, costos: 41000, rating: 5.0, activa: true, img: terraza3 },
 ];
 
-type Tab = "reservas" | "catalogo" | "dashboard";
+type Tab = "reservas" | "catalogo" | "roles" | "dashboard";
+
+type RolId = "superadmin" | "operaciones" | "finanzas" | "soporte" | "lectura";
+
+interface Rol {
+  id: RolId;
+  nombre: string;
+  descripcion: string;
+  permisos: string[];
+}
+
+interface Usuario {
+  id: string;
+  nombre: string;
+  email: string;
+  rol: RolId;
+  activo: boolean;
+  ultimoAcceso: string;
+}
+
+const PERMISOS_DISPONIBLES = [
+  "Ver dashboard",
+  "Gestionar reservas",
+  "Editar catálogo",
+  "Crear terrazas",
+  "Gestionar usuarios",
+  "Ver finanzas",
+  "Exportar reportes",
+  "Atender soporte",
+] as const;
+
+const rolesIniciales: Rol[] = [
+  {
+    id: "superadmin",
+    nombre: "Super Admin",
+    descripcion: "Acceso total al sistema, incluyendo gestión de roles y usuarios.",
+    permisos: [...PERMISOS_DISPONIBLES],
+  },
+  {
+    id: "operaciones",
+    nombre: "Operaciones",
+    descripcion: "Gestiona reservas y catálogo del día a día.",
+    permisos: ["Ver dashboard", "Gestionar reservas", "Editar catálogo"],
+  },
+  {
+    id: "finanzas",
+    nombre: "Finanzas",
+    descripcion: "Acceso a dashboards, ingresos y exportación de reportes.",
+    permisos: ["Ver dashboard", "Ver finanzas", "Exportar reportes"],
+  },
+  {
+    id: "soporte",
+    nombre: "Soporte",
+    descripcion: "Atiende huéspedes y consulta reservas.",
+    permisos: ["Gestionar reservas", "Atender soporte"],
+  },
+  {
+    id: "lectura",
+    nombre: "Solo lectura",
+    descripcion: "Visualiza información sin permisos de edición.",
+    permisos: ["Ver dashboard"],
+  },
+];
+
+const usuariosIniciales: Usuario[] = [
+  { id: "u-001", nombre: "Sofía Navarro", email: "sofia@lux.mx", rol: "superadmin", activo: true, ultimoAcceso: "Hace 12 min" },
+  { id: "u-002", nombre: "Mateo Linares", email: "mateo@lux.mx", rol: "operaciones", activo: true, ultimoAcceso: "Hace 2 h" },
+  { id: "u-003", nombre: "Renata Ortiz", email: "renata@lux.mx", rol: "finanzas", activo: true, ultimoAcceso: "Ayer" },
+  { id: "u-004", nombre: "Iván Pacheco", email: "ivan@lux.mx", rol: "soporte", activo: true, ultimoAcceso: "Hace 30 min" },
+  { id: "u-005", nombre: "Camila Vega", email: "camila@lux.mx", rol: "lectura", activo: false, ultimoAcceso: "Hace 6 días" },
+];
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [reservas, setReservas] = useState<Reserva[]>(reservasIniciales);
   const [terrazas, setTerrazas] = useState<Terraza[]>(terrazasIniciales);
+  const [roles, setRoles] = useState<Rol[]>(rolesIniciales);
+  const [usuarios, setUsuarios] = useState<Usuario[]>(usuariosIniciales);
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
@@ -85,6 +157,7 @@ function AdminPage() {
             { id: "dashboard", label: "Dashboard" },
             { id: "reservas", label: "Reservas" },
             { id: "catalogo", label: "Catálogo" },
+            { id: "roles", label: "Roles y usuarios" },
           ] as { id: Tab; label: string }[]).map((t) => (
             <button
               key={t.id}
@@ -104,6 +177,14 @@ function AdminPage() {
         {tab === "dashboard" && <Dashboard terrazas={terrazas} reservas={reservas} />}
         {tab === "reservas" && <Reservas reservas={reservas} setReservas={setReservas} />}
         {tab === "catalogo" && <Catalogo terrazas={terrazas} setTerrazas={setTerrazas} />}
+        {tab === "roles" && (
+          <RolesUsuarios
+            roles={roles}
+            setRoles={setRoles}
+            usuarios={usuarios}
+            setUsuarios={setUsuarios}
+          />
+        )}
       </main>
     </div>
   );
@@ -403,6 +484,211 @@ function Catalogo({ terrazas, setTerrazas }: { terrazas: Terraza[]; setTerrazas:
           </article>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ------------------------- ROLES Y USUARIOS ------------------------- */
+
+function RolesUsuarios({
+  roles,
+  setRoles,
+  usuarios,
+  setUsuarios,
+}: {
+  roles: Rol[];
+  setRoles: (r: Rol[]) => void;
+  usuarios: Usuario[];
+  setUsuarios: (u: Usuario[]) => void;
+}) {
+  const [rolSeleccionado, setRolSeleccionado] = useState<RolId>(roles[0].id);
+  const rolActivo = roles.find((r) => r.id === rolSeleccionado)!;
+
+  const togglePermiso = (permiso: string) => {
+    setRoles(
+      roles.map((r) =>
+        r.id === rolSeleccionado
+          ? {
+              ...r,
+              permisos: r.permisos.includes(permiso)
+                ? r.permisos.filter((p) => p !== permiso)
+                : [...r.permisos, permiso],
+            }
+          : r,
+      ),
+    );
+  };
+
+  const cambiarRolUsuario = (id: string, rol: RolId) =>
+    setUsuarios(usuarios.map((u) => (u.id === id ? { ...u, rol } : u)));
+
+  const toggleActivo = (id: string) =>
+    setUsuarios(usuarios.map((u) => (u.id === id ? { ...u, activo: !u.activo } : u)));
+
+  const conteoPorRol = (rolId: RolId) => usuarios.filter((u) => u.rol === rolId).length;
+
+  return (
+    <div className="space-y-12">
+      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
+        <div>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-sand-700">Accesos</span>
+          <h1 className="mt-3 font-serif text-4xl tracking-tight md:text-5xl">
+            Roles <span className="italic">y usuarios</span>
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Define qué puede hacer cada administrador dentro del panel.
+          </p>
+        </div>
+        <button className="bg-sand-700 px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-sand-50 transition-all hover:brightness-110">
+          + Invitar administrador
+        </button>
+      </div>
+
+      {/* Roles + permisos */}
+      <section className="grid grid-cols-1 gap-px bg-border lg:grid-cols-[280px_1fr]">
+        <aside className="bg-card p-6">
+          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+            Roles definidos
+          </p>
+          <ul className="space-y-1">
+            {roles.map((r) => {
+              const activo = r.id === rolSeleccionado;
+              return (
+                <li key={r.id}>
+                  <button
+                    onClick={() => setRolSeleccionado(r.id)}
+                    className={`flex w-full items-center justify-between gap-3 px-3 py-3 text-left transition-colors ${
+                      activo ? "bg-sand-700 text-sand-50" : "hover:bg-surface"
+                    }`}
+                  >
+                    <span>
+                      <span className="block font-serif text-base">{r.nombre}</span>
+                      <span className={`mt-0.5 block text-[10px] uppercase tracking-widest ${activo ? "text-sand-200" : "text-muted-foreground"}`}>
+                        {r.permisos.length} permisos
+                      </span>
+                    </span>
+                    <span className={`tabular text-xs ${activo ? "text-sand-200" : "text-muted-foreground"}`}>
+                      {conteoPorRol(r.id)}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </aside>
+
+        <div className="bg-card p-8 lg:p-10">
+          <div className="flex items-baseline justify-between border-b border-border pb-4">
+            <div>
+              <h2 className="font-serif text-2xl">{rolActivo.nombre}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{rolActivo.descripcion}</p>
+            </div>
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              {rolActivo.permisos.length} / {PERMISOS_DISPONIBLES.length} permisos
+            </span>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 gap-2 md:grid-cols-2">
+            {PERMISOS_DISPONIBLES.map((p) => {
+              const activo = rolActivo.permisos.includes(p);
+              const bloqueado = rolActivo.id === "superadmin";
+              return (
+                <label
+                  key={p}
+                  className={`flex cursor-pointer items-center justify-between gap-3 border border-border px-4 py-3 transition-colors ${
+                    activo ? "bg-sand-50" : "bg-card hover:bg-surface"
+                  } ${bloqueado ? "cursor-not-allowed opacity-70" : ""}`}
+                >
+                  <span className="text-sm">{p}</span>
+                  <input
+                    type="checkbox"
+                    checked={activo}
+                    disabled={bloqueado}
+                    onChange={() => togglePermiso(p)}
+                    className="h-4 w-4 accent-sand-700"
+                  />
+                </label>
+              );
+            })}
+          </div>
+          {rolActivo.id === "superadmin" && (
+            <p className="mt-4 text-[10px] uppercase tracking-widest text-muted-foreground">
+              El rol Super Admin tiene todos los permisos por seguridad y no puede modificarse.
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Usuarios */}
+      <section>
+        <div className="mb-6 flex items-baseline justify-between">
+          <h2 className="font-serif text-2xl">Administradores</h2>
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            {usuarios.length} usuarios · {usuarios.filter((u) => u.activo).length} activos
+          </span>
+        </div>
+
+        <div className="overflow-hidden bg-card ring-1 ring-border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-surface text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                <th className="px-6 py-4">Usuario</th>
+                <th className="px-6 py-4">Email</th>
+                <th className="px-6 py-4">Rol</th>
+                <th className="px-6 py-4">Último acceso</th>
+                <th className="px-6 py-4">Estado</th>
+                <th className="px-6 py-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {usuarios.map((u) => (
+                <tr key={u.id} className="border-b border-border last:border-0 hover:bg-surface/60">
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sand-200 font-serif text-sm text-sand-700">
+                        {u.nombre.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                      </span>
+                      <span className="font-medium">{u.nombre}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 text-muted-foreground">{u.email}</td>
+                  <td className="px-6 py-5">
+                    <select
+                      value={u.rol}
+                      onChange={(e) => cambiarRolUsuario(u.id, e.target.value as RolId)}
+                      className="border border-border bg-card px-2 py-1 text-xs uppercase tracking-widest"
+                    >
+                      {roles.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-6 py-5 text-xs text-muted-foreground">{u.ultimoAcceso}</td>
+                  <td className="px-6 py-5">
+                    <span
+                      className={`inline-block px-2 py-1 text-[10px] font-semibold uppercase tracking-widest ${
+                        u.activo ? "bg-sand-700 text-sand-50" : "bg-surface text-muted-foreground"
+                      }`}
+                    >
+                      {u.activo ? "Activo" : "Suspendido"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-5 text-right">
+                    <button
+                      onClick={() => toggleActivo(u.id)}
+                      className="text-[10px] font-semibold uppercase tracking-widest text-sand-700 hover:text-foreground"
+                    >
+                      {u.activo ? "Suspender" : "Reactivar"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }
