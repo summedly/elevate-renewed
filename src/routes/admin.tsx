@@ -735,7 +735,97 @@ const PLANTILLAS = [
   },
 ];
 
+interface Experiencia {
+  id: string;
+  nombre: string;
+  tagline: string;
+  ubicacion: string;
+  duracion: string;
+  precio: number;
+  capacidad: number;
+  servicios: string[];
+  terrazaId: number;
+}
+
+const EXPERIENCIAS_INICIALES: Experiencia[] = [
+  {
+    id: "exp-romance",
+    nombre: "Escape Romance",
+    tagline: "Dos noches diseñadas para enamorarse otra vez.",
+    ubicacion: "Valle de Guadalupe",
+    duracion: "2 noches · 3 días",
+    precio: 18900,
+    capacidad: 2,
+    servicios: [
+      "Hospedaje en suite privada",
+      "Cena maridaje con chef privado",
+      "Masaje en pareja al atardecer",
+      "Cata privada de vinos",
+      "Desayuno gourmet en terraza",
+    ],
+    terrazaId: 1,
+  },
+  {
+    id: "exp-celebracion",
+    nombre: "Celebración Lux",
+    tagline: "Tu evento, tu terraza, tu equipo creativo.",
+    ubicacion: "Tepoztlán",
+    duracion: "1 día · 12 horas",
+    precio: 42500,
+    capacidad: 20,
+    servicios: [
+      "Renta exclusiva de terraza",
+      "DJ y sistema de audio premium",
+      "Mixología de autor (4 horas barra libre)",
+      "Cena de 4 tiempos para 20 personas",
+      "Decoración floral y mantelería",
+      "Fotógrafo de evento",
+    ],
+    terrazaId: 2,
+  },
+  {
+    id: "exp-retiro",
+    nombre: "Retiro Wellness",
+    tagline: "Tres días para reconectar con calma y naturaleza.",
+    ubicacion: "Tulum",
+    duracion: "3 noches · 4 días",
+    precio: 26400,
+    capacidad: 4,
+    servicios: [
+      "Hospedaje con vista al mar",
+      "Yoga al amanecer (3 sesiones)",
+      "Temazcal ceremonial",
+      "Menú plant-based diseñado por chef",
+      "Masaje holístico individual",
+      "Excursión a cenote privado",
+    ],
+    terrazaId: 3,
+  },
+];
+
+const PLANTILLAS_EXPERIENCIA = [
+  {
+    id: "paquete",
+    nombre: "Paquete completo",
+    plantilla: (e: Experiencia) =>
+      `${e.nombre} · ${e.tagline}\n\n${e.duracion} en ${e.ubicacion} · hasta ${e.capacidad} personas.\n\nIncluye:\n${e.servicios.map((s) => `• ${s}`).join("\n")}\n\nDesde $${e.precio.toLocaleString()} MXN · Reserva en lux.mx`,
+  },
+  {
+    id: "invitacion",
+    nombre: "Invitación íntima",
+    plantilla: (e: Experiencia) =>
+      `Te invitamos a vivir ${e.nombre} en ${e.ubicacion}.\n\n${e.tagline}\n\n${e.duracion} · ${e.servicios.length} servicios curados para ti.\n\nReserva: lux.mx`,
+  },
+  {
+    id: "flash-exp",
+    nombre: "Promo flash",
+    plantilla: (e: Experiencia) =>
+      `Solo 48 horas: 20% OFF en ${e.nombre}.\n\nUn paquete de ${e.servicios.length} experiencias en ${e.ubicacion}, ${e.duracion}.\n\nAntes $${e.precio.toLocaleString()} · Hoy $${Math.round(e.precio * 0.8).toLocaleString()} MXN.`,
+  },
+];
+
 const HASHTAGS_BASE = "#LuxTerrazas #EscapadaPremium #FinDeSemana";
+const HASHTAGS_EXPERIENCIA = "#LuxExperiencias #PaquetesLux #EscapadasCuradas";
 
 function RedesSociales({ terrazas }: { terrazas: Terraza[] }) {
   const [terrazaId, setTerrazaId] = useState<number>(terrazas[0].id);
