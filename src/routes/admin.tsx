@@ -735,15 +735,115 @@ const PLANTILLAS = [
   },
 ];
 
+interface Experiencia {
+  id: string;
+  nombre: string;
+  tagline: string;
+  ubicacion: string;
+  duracion: string;
+  precio: number;
+  capacidad: number;
+  servicios: string[];
+  terrazaId: number;
+}
+
+const EXPERIENCIAS_INICIALES: Experiencia[] = [
+  {
+    id: "exp-romance",
+    nombre: "Escape Romance",
+    tagline: "Dos noches diseñadas para enamorarse otra vez.",
+    ubicacion: "Valle de Guadalupe",
+    duracion: "2 noches · 3 días",
+    precio: 18900,
+    capacidad: 2,
+    servicios: [
+      "Hospedaje en suite privada",
+      "Cena maridaje con chef privado",
+      "Masaje en pareja al atardecer",
+      "Cata privada de vinos",
+      "Desayuno gourmet en terraza",
+    ],
+    terrazaId: 1,
+  },
+  {
+    id: "exp-celebracion",
+    nombre: "Celebración Lux",
+    tagline: "Tu evento, tu terraza, tu equipo creativo.",
+    ubicacion: "Tepoztlán",
+    duracion: "1 día · 12 horas",
+    precio: 42500,
+    capacidad: 20,
+    servicios: [
+      "Renta exclusiva de terraza",
+      "DJ y sistema de audio premium",
+      "Mixología de autor (4 horas barra libre)",
+      "Cena de 4 tiempos para 20 personas",
+      "Decoración floral y mantelería",
+      "Fotógrafo de evento",
+    ],
+    terrazaId: 2,
+  },
+  {
+    id: "exp-retiro",
+    nombre: "Retiro Wellness",
+    tagline: "Tres días para reconectar con calma y naturaleza.",
+    ubicacion: "Tulum",
+    duracion: "3 noches · 4 días",
+    precio: 26400,
+    capacidad: 4,
+    servicios: [
+      "Hospedaje con vista al mar",
+      "Yoga al amanecer (3 sesiones)",
+      "Temazcal ceremonial",
+      "Menú plant-based diseñado por chef",
+      "Masaje holístico individual",
+      "Excursión a cenote privado",
+    ],
+    terrazaId: 3,
+  },
+];
+
+const PLANTILLAS_EXPERIENCIA = [
+  {
+    id: "paquete",
+    nombre: "Paquete completo",
+    plantilla: (e: Experiencia) =>
+      `${e.nombre} · ${e.tagline}\n\n${e.duracion} en ${e.ubicacion} · hasta ${e.capacidad} personas.\n\nIncluye:\n${e.servicios.map((s) => `• ${s}`).join("\n")}\n\nDesde $${e.precio.toLocaleString()} MXN · Reserva en lux.mx`,
+  },
+  {
+    id: "invitacion",
+    nombre: "Invitación íntima",
+    plantilla: (e: Experiencia) =>
+      `Te invitamos a vivir ${e.nombre} en ${e.ubicacion}.\n\n${e.tagline}\n\n${e.duracion} · ${e.servicios.length} servicios curados para ti.\n\nReserva: lux.mx`,
+  },
+  {
+    id: "flash-exp",
+    nombre: "Promo flash",
+    plantilla: (e: Experiencia) =>
+      `Solo 48 horas: 20% OFF en ${e.nombre}.\n\nUn paquete de ${e.servicios.length} experiencias en ${e.ubicacion}, ${e.duracion}.\n\nAntes $${e.precio.toLocaleString()} · Hoy $${Math.round(e.precio * 0.8).toLocaleString()} MXN.`,
+  },
+];
+
 const HASHTAGS_BASE = "#LuxTerrazas #EscapadaPremium #FinDeSemana";
+const HASHTAGS_EXPERIENCIA = "#LuxExperiencias #PaquetesLux #EscapadasCuradas";
 
 function RedesSociales({ terrazas }: { terrazas: Terraza[] }) {
+  const [modo, setModo] = useState<"terraza" | "experiencia">("terraza");
   const [terrazaId, setTerrazaId] = useState<number>(terrazas[0].id);
+  const [experienciaId, setExperienciaId] = useState<string>(EXPERIENCIAS_INICIALES[0].id);
   const [plantillaId, setPlantillaId] = useState<string>(PLANTILLAS[0].id);
-  const terraza = terrazas.find((t) => t.id === terrazaId)!;
-  const plantilla = PLANTILLAS.find((p) => p.id === plantillaId)!;
+  const [plantillaExpId, setPlantillaExpId] = useState<string>(PLANTILLAS_EXPERIENCIA[0].id);
 
-  const [copy, setCopy] = useState<string>(plantilla.plantilla(terraza));
+  const terraza = terrazas.find((t) => t.id === terrazaId)!;
+  const experiencia = EXPERIENCIAS_INICIALES.find((e) => e.id === experienciaId)!;
+  const terrazaExp = terrazas.find((t) => t.id === experiencia.terrazaId) ?? terrazas[0];
+
+  const plantillaInicial =
+    modo === "terraza"
+      ? PLANTILLAS[0].plantilla(terrazas[0])
+      : PLANTILLAS_EXPERIENCIA[0].plantilla(EXPERIENCIAS_INICIALES[0]);
+
+  const [copy, setCopy] = useState<string>(plantillaInicial);
   const [hashtags, setHashtags] = useState<string>(HASHTAGS_BASE);
   const [redesSeleccionadas, setRedesSeleccionadas] = useState<Record<RedId, boolean>>({
     facebook: true,
@@ -754,11 +854,30 @@ function RedesSociales({ terrazas }: { terrazas: Terraza[] }) {
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState<{ red: RedId; ok: boolean }[] | null>(null);
 
-  const aplicarPlantilla = (pId: string, tId: number) => {
+  const aplicarPlantillaTerraza = (pId: string, tId: number) => {
     const p = PLANTILLAS.find((x) => x.id === pId)!;
     const t = terrazas.find((x) => x.id === tId)!;
     setCopy(p.plantilla(t));
     setResultado(null);
+  };
+
+  const aplicarPlantillaExperiencia = (pId: string, eId: string) => {
+    const p = PLANTILLAS_EXPERIENCIA.find((x) => x.id === pId)!;
+    const e = EXPERIENCIAS_INICIALES.find((x) => x.id === eId)!;
+    setCopy(p.plantilla(e));
+    setResultado(null);
+  };
+
+  const cambiarModo = (m: "terraza" | "experiencia") => {
+    setModo(m);
+    setResultado(null);
+    if (m === "terraza") {
+      setHashtags(HASHTAGS_BASE);
+      aplicarPlantillaTerraza(plantillaId, terrazaId);
+    } else {
+      setHashtags(HASHTAGS_EXPERIENCIA);
+      aplicarPlantillaExperiencia(plantillaExpId, experienciaId);
+    }
   };
 
   const toggleRed = (id: RedId) =>
@@ -778,6 +897,9 @@ function RedesSociales({ terrazas }: { terrazas: Terraza[] }) {
 
   const textoCompleto = `${copy}\n\n${hashtags}`.trim();
 
+  const tituloPreview = modo === "terraza" ? terraza.nombre : experiencia.nombre;
+  const imagenPreview = modo === "terraza" ? terraza.img : terrazaExp.img;
+
   return (
     <div className="space-y-10">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
@@ -787,7 +909,7 @@ function RedesSociales({ terrazas }: { terrazas: Terraza[] }) {
             Redes <span className="italic">sociales</span>
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Anuncia una terraza y publica con un clic en Facebook, Instagram, TikTok y estados de WhatsApp.
+            Anuncia una terraza o una experiencia y publica con un clic en Facebook, Instagram, TikTok y estados de WhatsApp.
           </p>
         </div>
       </div>
@@ -795,37 +917,115 @@ function RedesSociales({ terrazas }: { terrazas: Terraza[] }) {
       <div className="grid grid-cols-1 gap-px bg-border lg:grid-cols-[1fr_380px]">
         {/* Editor */}
         <div className="space-y-8 bg-card p-8 lg:p-10">
-          {/* Terraza */}
+          {/* Tipo de anuncio */}
           <div>
             <label className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-              Terraza a anunciar
+              Tipo de anuncio
             </label>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {terrazas.map((t) => {
-                const activa = t.id === terrazaId;
+            <div className="mt-3 inline-flex border border-border bg-card">
+              {(["terraza", "experiencia"] as const).map((m) => {
+                const activa = modo === m;
                 return (
                   <button
-                    key={t.id}
-                    onClick={() => {
-                      setTerrazaId(t.id);
-                      aplicarPlantilla(plantillaId, t.id);
-                    }}
-                    className={`flex items-center gap-3 border p-3 text-left transition-colors ${
-                      activa ? "border-sand-700 bg-sand-50" : "border-border bg-card hover:bg-surface"
+                    key={m}
+                    onClick={() => cambiarModo(m)}
+                    className={`px-5 py-2 text-[10px] font-semibold uppercase tracking-widest transition-colors ${
+                      activa ? "bg-sand-700 text-sand-50" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <img src={t.img} alt={t.nombre} className="h-14 w-14 shrink-0 object-cover" />
-                    <span className="flex-1">
-                      <span className="block font-serif text-base">{t.nombre}</span>
-                      <span className="mt-0.5 block text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {t.ubicacion}
-                      </span>
-                    </span>
+                    {m === "terraza" ? "Terraza" : "Experiencia / paquete"}
                   </button>
                 );
               })}
             </div>
           </div>
+
+          {/* Selector */}
+          {modo === "terraza" ? (
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+                Terraza a anunciar
+              </label>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {terrazas.map((t) => {
+                  const activa = t.id === terrazaId;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        setTerrazaId(t.id);
+                        aplicarPlantillaTerraza(plantillaId, t.id);
+                      }}
+                      className={`flex items-center gap-3 border p-3 text-left transition-colors ${
+                        activa ? "border-sand-700 bg-sand-50" : "border-border bg-card hover:bg-surface"
+                      }`}
+                    >
+                      <img src={t.img} alt={t.nombre} className="h-14 w-14 shrink-0 object-cover" />
+                      <span className="flex-1">
+                        <span className="block font-serif text-base">{t.nombre}</span>
+                        <span className="mt-0.5 block text-[10px] uppercase tracking-widest text-muted-foreground">
+                          {t.ubicacion}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+                Experiencia o paquete
+              </label>
+              <div className="mt-3 grid grid-cols-1 gap-3">
+                {EXPERIENCIAS_INICIALES.map((e) => {
+                  const activa = e.id === experienciaId;
+                  return (
+                    <button
+                      key={e.id}
+                      onClick={() => {
+                        setExperienciaId(e.id);
+                        aplicarPlantillaExperiencia(plantillaExpId, e.id);
+                      }}
+                      className={`flex flex-col gap-2 border p-4 text-left transition-colors ${
+                        activa ? "border-sand-700 bg-sand-50" : "border-border bg-card hover:bg-surface"
+                      }`}
+                    >
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="font-serif text-lg">{e.nombre}</span>
+                        <span className="tabular text-xs text-muted-foreground">
+                          ${e.precio.toLocaleString()} MXN
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{e.tagline}</span>
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                        <span>{e.ubicacion}</span>
+                        <span>·</span>
+                        <span>{e.duracion}</span>
+                        <span>·</span>
+                        <span>{e.servicios.length} servicios</span>
+                      </div>
+                      <ul className="mt-1 flex flex-wrap gap-1.5">
+                        {e.servicios.slice(0, 4).map((s) => (
+                          <li
+                            key={s}
+                            className="bg-surface px-2 py-1 text-[10px] text-muted-foreground ring-1 ring-border"
+                          >
+                            {s}
+                          </li>
+                        ))}
+                        {e.servicios.length > 4 && (
+                          <li className="px-2 py-1 text-[10px] text-muted-foreground">
+                            +{e.servicios.length - 4} más
+                          </li>
+                        )}
+                      </ul>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Plantilla */}
           <div>
@@ -833,14 +1033,19 @@ function RedesSociales({ terrazas }: { terrazas: Terraza[] }) {
               Plantilla de copy
             </label>
             <div className="mt-3 flex flex-wrap gap-2">
-              {PLANTILLAS.map((p) => {
-                const activa = p.id === plantillaId;
+              {(modo === "terraza" ? PLANTILLAS : PLANTILLAS_EXPERIENCIA).map((p) => {
+                const activa = modo === "terraza" ? p.id === plantillaId : p.id === plantillaExpId;
                 return (
                   <button
                     key={p.id}
                     onClick={() => {
-                      setPlantillaId(p.id);
-                      aplicarPlantilla(p.id, terrazaId);
+                      if (modo === "terraza") {
+                        setPlantillaId(p.id);
+                        aplicarPlantillaTerraza(p.id, terrazaId);
+                      } else {
+                        setPlantillaExpId(p.id);
+                        aplicarPlantillaExperiencia(p.id, experienciaId);
+                      }
                     }}
                     className={`px-3 py-2 text-[10px] font-semibold uppercase tracking-widest transition-colors ${
                       activa
@@ -871,7 +1076,7 @@ function RedesSociales({ terrazas }: { terrazas: Terraza[] }) {
                 setCopy(e.target.value);
                 setResultado(null);
               }}
-              rows={7}
+              rows={modo === "experiencia" ? 10 : 7}
               className="mt-3 w-full resize-none border border-border bg-card p-4 font-sans text-sm leading-relaxed text-foreground focus:border-sand-700 focus:outline-none"
             />
           </div>
@@ -922,7 +1127,12 @@ function RedesSociales({ terrazas }: { terrazas: Terraza[] }) {
           <div className="flex flex-col items-start justify-between gap-4 border-t border-border pt-6 md:flex-row md:items-center">
             <p className="text-xs text-muted-foreground">
               Se publicará en {seleccionadas.length} red{seleccionadas.length === 1 ? "" : "es"} ·{" "}
-              <span className="text-foreground">{terraza.nombre}</span>
+              <span className="text-foreground">{tituloPreview}</span>
+              {modo === "experiencia" && (
+                <span className="ml-1 text-[10px] uppercase tracking-widest text-sand-700">
+                  · Paquete
+                </span>
+              )}
             </p>
             <button
               onClick={publicar}
@@ -976,7 +1186,14 @@ function RedesSociales({ terrazas }: { terrazas: Terraza[] }) {
                 </span>
                 <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{r.handle}</span>
               </header>
-              <img src={terraza.img} alt={terraza.nombre} className="aspect-[4/3] w-full object-cover" />
+              <div className="relative">
+                <img src={imagenPreview} alt={tituloPreview} className="aspect-[4/3] w-full object-cover" />
+                {modo === "experiencia" && (
+                  <span className="absolute left-3 top-3 bg-sand-700 px-2 py-1 text-[9px] font-semibold uppercase tracking-widest text-sand-50">
+                    Paquete
+                  </span>
+                )}
+              </div>
               <div className="p-4">
                 <p className="whitespace-pre-line text-xs leading-relaxed">
                   {textoCompleto.length > r.maxLength
