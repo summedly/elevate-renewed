@@ -429,9 +429,59 @@ function EstadoBadge({ estado }: { estado: Estado }) {
 
 /* ------------------------------ CATÁLOGO ----------------------------- */
 
+type TerrazaDraft = Omit<Terraza, "id"> & { id: number | null };
+
+const TERRAZA_VACIA: TerrazaDraft = {
+  id: null,
+  nombre: "",
+  ubicacion: "",
+  precio: 0,
+  capacidad: 0,
+  ocupacion: 0,
+  ingresos: 0,
+  costos: 0,
+  rating: 5,
+  activa: true,
+  img: "",
+};
+
 function Catalogo({ terrazas, setTerrazas }: { terrazas: Terraza[]; setTerrazas: (t: Terraza[]) => void }) {
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [draft, setDraft] = useState<TerrazaDraft>(TERRAZA_VACIA);
+
   const toggleActiva = (id: number) =>
     setTerrazas(terrazas.map((t) => (t.id === id ? { ...t, activa: !t.activa } : t)));
+
+  const eliminar = (id: number) => setTerrazas(terrazas.filter((t) => t.id !== id));
+
+  const abrirNueva = () => {
+    setDraft(TERRAZA_VACIA);
+    setModalAbierto(true);
+  };
+
+  const abrirEdicion = (t: Terraza) => {
+    setDraft({ ...t });
+    setModalAbierto(true);
+  };
+
+  const cerrar = () => setModalAbierto(false);
+
+  const onImagen = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => setDraft((d) => ({ ...d, img: String(reader.result) }));
+    reader.readAsDataURL(file);
+  };
+
+  const guardar = () => {
+    if (!draft.nombre.trim() || !draft.ubicacion.trim()) return;
+    if (draft.id === null) {
+      const nuevoId = terrazas.length ? Math.max(...terrazas.map((t) => t.id)) + 1 : 1;
+      setTerrazas([...terrazas, { ...draft, id: nuevoId, img: draft.img || heroImg } as Terraza]);
+    } else {
+      setTerrazas(terrazas.map((t) => (t.id === draft.id ? ({ ...draft, id: draft.id } as Terraza) : t)));
+    }
+    setModalAbierto(false);
+  };
 
   return (
     <div className="space-y-8">
@@ -441,7 +491,10 @@ function Catalogo({ terrazas, setTerrazas }: { terrazas: Terraza[]; setTerrazas:
           <h1 className="mt-3 font-serif text-4xl tracking-tight md:text-5xl">Catálogo de terrazas</h1>
           <p className="mt-2 text-sm text-muted-foreground">{terrazas.length} propiedades activas en el sistema.</p>
         </div>
-        <button className="bg-sand-700 px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-sand-50 transition-all hover:brightness-110">
+        <button
+          onClick={abrirNueva}
+          className="bg-sand-700 px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-sand-50 transition-all hover:brightness-110"
+        >
           + Nueva terraza
         </button>
       </div>
@@ -475,18 +528,271 @@ function Catalogo({ terrazas, setTerrazas }: { terrazas: Terraza[]; setTerrazas:
                 </div>
               </div>
               <div className="mt-auto flex items-center justify-end gap-3 pt-4">
-                <button className="text-[10px] font-semibold uppercase tracking-widest text-sand-700 hover:text-foreground">
+                <button
+                  onClick={() => abrirEdicion(t)}
+                  className="text-[10px] font-semibold uppercase tracking-widest text-sand-700 hover:text-foreground"
+                >
                   Editar
                 </button>
                 <button onClick={() => toggleActiva(t.id)} className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground">
                   {t.activa ? "Pausar" : "Activar"}
+                </button>
+                <button
+                  onClick={() => eliminar(t.id)}
+                  className="text-[10px] font-semibold uppercase tracking-widest text-destructive/80 hover:text-destructive"
+                >
+                  Eliminar
                 </button>
               </div>
             </div>
           </article>
         ))}
       </div>
+
+      {modalAbierto && (
+        <TerrazaModal
+          draft={draft}
+          setDraft={setDraft}
+          onImagen={onImagen}
+          onCerrar={cerrar}
+          onGuardar={guardar}
+        />
+      )}
     </div>
+  );
+}
+
+function TerrazaModal({
+  draft,
+  setDraft,
+  onImagen,
+  onCerrar,
+  onGuardar,
+}: {
+  draft: TerrazaDraft;
+  setDraft: (fn: (d: TerrazaDraft) => TerrazaDraft) => void;
+  onImagen: (f: File) => void;
+  onCerrar: () => void;
+  onGuardar: () => void;
+}) {
+  const esEdicion = draft.id !== null;
+  const set = <K extends keyof TerrazaDraft>(k: K, v: TerrazaDraft[K]) =>
+    setDraft((d) => ({ ...d, [k]: v }));
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      onClick={onCerrar}
+    >
+      <div
+        className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto bg-card ring-1 ring-border"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 px-8 py-5 backdrop-blur">
+          <div>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-sand-700">
+              {esEdicion ? "Editar propiedad" : "Nueva propiedad"}
+            </span>
+            <h2 className="mt-1 font-serif text-2xl tracking-tight">
+              {esEdicion ? draft.nombre || "Sin nombre" : "Crea una nueva terraza"}
+            </h2>
+          </div>
+          <button
+            onClick={onCerrar}
+            aria-label="Cerrar"
+            className="text-2xl leading-none text-muted-foreground hover:text-foreground"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Body: preview + form */}
+        <div className="grid grid-cols-1 gap-px bg-border md:grid-cols-[1fr_1.2fr]">
+          {/* Preview card */}
+          <div className="space-y-4 bg-surface p-6">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+              Vista previa
+            </p>
+            <div className="overflow-hidden bg-card ring-1 ring-border">
+              <div className="relative aspect-[4/3] w-full bg-muted">
+                {draft.img ? (
+                  <img src={draft.img} alt="Preview" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Sin imagen
+                  </div>
+                )}
+                <span className={`absolute right-3 top-3 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest ${draft.activa ? "bg-sand-700 text-sand-50" : "bg-card text-muted-foreground"}`}>
+                  {draft.activa ? "Activa" : "Pausada"}
+                </span>
+              </div>
+              <div className="space-y-3 p-5">
+                <div>
+                  <h3 className="font-serif text-xl">{draft.nombre || "Nombre de la terraza"}</h3>
+                  <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {draft.ubicacion || "Ubicación"}
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-3 border-t border-border pt-3 text-xs">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Precio</p>
+                    <p className="tabular mt-1 font-medium">${Number(draft.precio).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Capacidad</p>
+                    <p className="tabular mt-1 font-medium">{draft.capacidad} pax</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Rating</p>
+                    <p className="tabular mt-1 font-medium">★ {Number(draft.rating).toFixed(1)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Image uploader */}
+            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 border border-dashed border-border bg-card p-6 text-center transition-colors hover:border-sand-700">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-sand-700">
+                Subir imagen
+              </span>
+              <span className="text-xs text-muted-foreground">PNG, JPG o WEBP · arrastra o haz clic</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onImagen(f);
+                }}
+              />
+            </label>
+          </div>
+
+          {/* Form */}
+          <div className="space-y-6 bg-card p-8">
+            <Campo label="Nombre de la terraza">
+              <input
+                type="text"
+                value={draft.nombre}
+                onChange={(e) => set("nombre", e.target.value)}
+                placeholder="Ej. Terraza Sunset Lux"
+                className="w-full border-b border-border bg-transparent py-2 text-sm outline-none focus:border-sand-700"
+              />
+            </Campo>
+
+            <Campo label="Ubicación">
+              <input
+                type="text"
+                value={draft.ubicacion}
+                onChange={(e) => set("ubicacion", e.target.value)}
+                placeholder="Ej. Valle de Bravo"
+                className="w-full border-b border-border bg-transparent py-2 text-sm outline-none focus:border-sand-700"
+              />
+            </Campo>
+
+            <div className="grid grid-cols-2 gap-5">
+              <Campo label="Precio por noche (MXN)">
+                <input
+                  type="number"
+                  min={0}
+                  value={draft.precio || ""}
+                  onChange={(e) => set("precio", Number(e.target.value))}
+                  className="w-full border-b border-border bg-transparent py-2 text-sm outline-none focus:border-sand-700"
+                />
+              </Campo>
+              <Campo label="Capacidad (personas)">
+                <input
+                  type="number"
+                  min={0}
+                  value={draft.capacidad || ""}
+                  onChange={(e) => set("capacidad", Number(e.target.value))}
+                  className="w-full border-b border-border bg-transparent py-2 text-sm outline-none focus:border-sand-700"
+                />
+              </Campo>
+              <Campo label="Ocupación (%)">
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={draft.ocupacion || ""}
+                  onChange={(e) => set("ocupacion", Number(e.target.value))}
+                  className="w-full border-b border-border bg-transparent py-2 text-sm outline-none focus:border-sand-700"
+                />
+              </Campo>
+              <Campo label="Rating">
+                <input
+                  type="number"
+                  min={0}
+                  max={5}
+                  step={0.1}
+                  value={draft.rating || ""}
+                  onChange={(e) => set("rating", Number(e.target.value))}
+                  className="w-full border-b border-border bg-transparent py-2 text-sm outline-none focus:border-sand-700"
+                />
+              </Campo>
+              <Campo label="Ingresos mensuales (MXN)">
+                <input
+                  type="number"
+                  min={0}
+                  value={draft.ingresos || ""}
+                  onChange={(e) => set("ingresos", Number(e.target.value))}
+                  className="w-full border-b border-border bg-transparent py-2 text-sm outline-none focus:border-sand-700"
+                />
+              </Campo>
+              <Campo label="Costos mensuales (MXN)">
+                <input
+                  type="number"
+                  min={0}
+                  value={draft.costos || ""}
+                  onChange={(e) => set("costos", Number(e.target.value))}
+                  className="w-full border-b border-border bg-transparent py-2 text-sm outline-none focus:border-sand-700"
+                />
+              </Campo>
+            </div>
+
+            <label className="flex cursor-pointer items-center gap-3 pt-2">
+              <input
+                type="checkbox"
+                checked={draft.activa}
+                onChange={(e) => set("activa", e.target.checked)}
+                className="h-4 w-4 accent-sand-700"
+              />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-foreground">
+                Propiedad activa y visible en el catálogo
+              </span>
+            </label>
+
+            <div className="flex items-center justify-end gap-3 border-t border-border pt-6">
+              <button
+                onClick={onCerrar}
+                className="px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={onGuardar}
+                disabled={!draft.nombre.trim() || !draft.ubicacion.trim()}
+                className="bg-sand-700 px-6 py-3 text-[10px] font-semibold uppercase tracking-widest text-sand-50 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {esEdicion ? "Guardar cambios" : "Crear terraza"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Campo({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+        {label}
+      </span>
+      {children}
+    </label>
   );
 }
 
