@@ -191,6 +191,7 @@ function AdminPage() {
             { id: "roles", label: "Roles y usuarios" },
             { id: "redes", label: "Redes sociales" },
             { id: "crm", label: "CRM" },
+            { id: "campanas", label: "Campañas MKT" },
           ] as { id: Tab; label: string }[]).map((t) => (
             <button
               key={t.id}
