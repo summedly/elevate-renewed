@@ -1550,3 +1550,220 @@ function RedesSociales({ terrazas }: { terrazas: Terraza[] }) {
     </div>
   );
 }
+
+/* ----------------------------- CRM ----------------------------- */
+
+const ETAPAS: { id: EtapaCRM; label: string; desc: string }[] = [
+  { id: "descubrimiento", label: "Descubrimiento", desc: "Primer contacto. Detectaron la marca." },
+  { id: "interes", label: "Interés", desc: "Pidieron info, iniciaron conversación." },
+  { id: "calificacion", label: "Calificación", desc: "Presupuesto, invitados, fecha y tipo de evento." },
+];
+
+const TEMP_COLOR: Record<Temperatura, string> = {
+  caliente: "bg-red-100 text-red-700 border-red-200",
+  tibio: "bg-amber-100 text-amber-700 border-amber-200",
+  frio: "bg-sky-100 text-sky-700 border-sky-200",
+};
+
+function CRM({ leads, setLeads }: { leads: Lead[]; setLeads: React.Dispatch<React.SetStateAction<Lead[]>> }) {
+  const [etapaActiva, setEtapaActiva] = useState<EtapaCRM>("calificacion");
+
+  const kpisInteres = useMemo(() => {
+    const enInteres = leads.filter((l) => l.etapa === "interes" || l.etapa === "calificacion");
+    const conversaciones = leads.filter((l) => l.respondio || l.etapa !== "descubrimiento").length;
+    const generados = enInteres.length;
+    const conResp = leads.filter((l) => l.tiempoRespuesta > 0);
+    const tiempoProm = conResp.length
+      ? Math.round(conResp.reduce((a, l) => a + l.tiempoRespuesta, 0) / conResp.length)
+      : 0;
+    const pctResp = leads.length
+      ? Math.round((leads.filter((l) => l.respondio).length / leads.length) * 100)
+      : 0;
+    return { conversaciones, generados, tiempoProm, pctResp };
+  }, [leads]);
+
+  const kpisCalif = useMemo(() => {
+    const calif = leads.filter((l) => l.etapa === "calificacion");
+    const calientes = calif.filter((l) => l.temperatura === "caliente");
+    const pctCal = calif.length ? Math.round((calientes.length / calif.length) * 100) : 0;
+    const presProm = calif.length
+      ? Math.round(calif.reduce((a, l) => a + l.presupuesto, 0) / calif.length)
+      : 0;
+    return { total: calif.length, pctCal, presProm };
+  }, [leads]);
+
+  const moverEtapa = (id: string, etapa: EtapaCRM) =>
+    setLeads((arr) => arr.map((l) => (l.id === id ? { ...l, etapa } : l)));
+  const cambiarTemp = (id: string, t: Temperatura) =>
+    setLeads((arr) => arr.map((l) => (l.id === id ? { ...l, temperatura: t } : l)));
+
+  const leadsEtapa = leads.filter((l) => l.etapa === etapaActiva);
+
+  return (
+    <div className="space-y-10">
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <h2 className="font-serif text-3xl text-foreground">CRM · Pipeline de leads</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Da seguimiento a prospectos desde el primer contacto hasta el lead calificado.
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Total leads</div>
+          <div className="font-serif text-4xl text-sand-700">{leads.length}</div>
+        </div>
+      </div>
+
+      {/* Pipeline visual */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {ETAPAS.map((e, i) => {
+          const count = leads.filter((l) => l.etapa === e.id).length;
+          const activa = etapaActiva === e.id;
+          return (
+            <button
+              key={e.id}
+              onClick={() => setEtapaActiva(e.id)}
+              className={`group rounded-xl border p-5 text-left transition-all ${
+                activa
+                  ? "border-sand-700 bg-sand-50 shadow-md"
+                  : "border-border bg-card hover:border-sand-700/40"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+                  Etapa {i + 1}
+                </span>
+                <span className="rounded-full bg-foreground/5 px-2 py-0.5 text-xs font-semibold">
+                  {count}
+                </span>
+              </div>
+              <div className="mt-3 font-serif text-xl text-foreground">{e.label}</div>
+              <p className="mt-1 text-xs text-muted-foreground">{e.desc}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* KPIs Interés */}
+      <section className="rounded-xl border border-border bg-card p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="font-serif text-xl text-foreground">KPIs · Interés</h3>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+            Etapa 2
+          </span>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KPI label="Conversaciones iniciadas" value={kpisInteres.conversaciones} />
+          <KPI label="Leads generados" value={kpisInteres.generados} />
+          <KPI label="Tiempo de respuesta" value={`${kpisInteres.tiempoProm} min`} />
+          <KPI label="% que responde" value={`${kpisInteres.pctResp}%`} />
+        </div>
+      </section>
+
+      {/* KPIs Calificación */}
+      <section className="rounded-xl border border-border bg-card p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="font-serif text-xl text-foreground">KPIs · Calificación</h3>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+            Etapa 3
+          </span>
+        </div>
+        <p className="mb-4 text-xs text-muted-foreground">
+          Objetivo: no perder tiempo con leads poco probables.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <KPI label="Leads calificados" value={kpisCalif.total} />
+          <KPI label="% de leads calientes" value={`${kpisCalif.pctCal}%`} />
+          <KPI label="Presupuesto promedio" value={`$${kpisCalif.presProm.toLocaleString()}`} />
+        </div>
+      </section>
+
+      {/* Tabla de leads de la etapa activa */}
+      <section className="rounded-xl border border-border bg-card">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div>
+            <h3 className="font-serif text-xl text-foreground">
+              {ETAPAS.find((e) => e.id === etapaActiva)?.label}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {leadsEtapa.length} {leadsEtapa.length === 1 ? "lead" : "leads"} en esta etapa
+            </p>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-surface text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 text-left">Lead</th>
+                <th className="px-4 py-3 text-left">Canal</th>
+                <th className="px-4 py-3 text-left">Evento</th>
+                <th className="px-4 py-3 text-right">Invitados</th>
+                <th className="px-4 py-3 text-right">Presupuesto</th>
+                <th className="px-4 py-3 text-left">Fecha</th>
+                <th className="px-4 py-3 text-left">Temperatura</th>
+                <th className="px-4 py-3 text-left">Mover</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leadsEtapa.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                    Sin leads en esta etapa.
+                  </td>
+                </tr>
+              )}
+              {leadsEtapa.map((l) => (
+                <tr key={l.id} className="border-t border-border align-top">
+                  <td className="px-4 py-3">
+                    <div className="font-semibold text-foreground">{l.nombre}</div>
+                    <div className="text-xs text-muted-foreground">{l.contacto}</div>
+                    <div className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">{l.creado}</div>
+                  </td>
+                  <td className="px-4 py-3 text-xs">{l.canal}</td>
+                  <td className="px-4 py-3 text-xs">{l.tipoEvento}</td>
+                  <td className="px-4 py-3 text-right text-xs">{l.invitados || "—"}</td>
+                  <td className="px-4 py-3 text-right text-xs font-semibold">
+                    {l.presupuesto ? `$${l.presupuesto.toLocaleString()}` : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-xs">{l.fecha}</td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={l.temperatura}
+                      onChange={(e) => cambiarTemp(l.id, e.target.value as Temperatura)}
+                      className={`rounded-md border px-2 py-1 text-xs font-semibold uppercase tracking-wider ${TEMP_COLOR[l.temperatura]}`}
+                    >
+                      <option value="caliente">Caliente</option>
+                      <option value="tibio">Tibio</option>
+                      <option value="frio">Frío</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={l.etapa}
+                      onChange={(e) => moverEtapa(l.id, e.target.value as EtapaCRM)}
+                      className="rounded-md border border-border bg-background px-2 py-1 text-xs"
+                    >
+                      {ETAPAS.map((e) => (
+                        <option key={e.id} value={e.id}>{e.label}</option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function KPI({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-lg border border-border bg-surface p-4">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{label}</div>
+      <div className="mt-2 font-serif text-2xl text-foreground">{value}</div>
+    </div>
+  );
+}
