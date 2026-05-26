@@ -1653,10 +1653,10 @@ function CRM({ leads, setLeads }: { leads: Lead[]; setLeads: React.Dispatch<Reac
           </span>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KPI label="Conversaciones iniciadas" value={kpisInteres.conversaciones} />
-          <KPI label="Leads generados" value={kpisInteres.generados} />
-          <KPI label="Tiempo de respuesta" value={`${kpisInteres.tiempoProm} min`} />
-          <KPI label="% que responde" value={`${kpisInteres.pctResp}%`} />
+          <KPICrm label="Conversaciones iniciadas" value={kpisInteres.conversaciones} />
+          <KPICrm label="Leads generados" value={kpisInteres.generados} />
+          <KPICrm label="Tiempo de respuesta" value={`${kpisInteres.tiempoProm} min`} />
+          <KPICrm label="% que responde" value={`${kpisInteres.pctResp}%`} />
         </div>
       </section>
 
@@ -1672,9 +1672,9 @@ function CRM({ leads, setLeads }: { leads: Lead[]; setLeads: React.Dispatch<Reac
           Objetivo: no perder tiempo con leads poco probables.
         </p>
         <div className="grid gap-4 sm:grid-cols-3">
-          <KPI label="Leads calificados" value={kpisCalif.total} />
-          <KPI label="% de leads calientes" value={`${kpisCalif.pctCal}%`} />
-          <KPI label="Presupuesto promedio" value={`$${kpisCalif.presProm.toLocaleString()}`} />
+          <KPICrm label="Leads calificados" value={kpisCalif.total} />
+          <KPICrm label="% de leads calientes" value={`${kpisCalif.pctCal}%`} />
+          <KPICrm label="Presupuesto promedio" value={`$${kpisCalif.presProm.toLocaleString()}`} />
         </div>
       </section>
 
@@ -1759,7 +1759,7 @@ function CRM({ leads, setLeads }: { leads: Lead[]; setLeads: React.Dispatch<Reac
   );
 }
 
-function KPI({ label, value }: { label: string; value: string | number }) {
+function KPICrm({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-lg border border-border bg-surface p-4">
       <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{label}</div>
