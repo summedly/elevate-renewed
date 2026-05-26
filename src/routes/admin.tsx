@@ -58,7 +58,37 @@ const terrazasIniciales: Terraza[] = [
   { id: 4, nombre: "Rooftop Premium CDMX", ubicacion: "Polanco, CDMX", precio: 6200, capacidad: 20, ocupacion: 88, ingresos: 163680, costos: 41000, rating: 5.0, activa: true, img: terraza3 },
 ];
 
-type Tab = "reservas" | "catalogo" | "roles" | "redes" | "dashboard";
+type Tab = "reservas" | "catalogo" | "roles" | "redes" | "crm" | "dashboard";
+
+type EtapaCRM = "descubrimiento" | "interes" | "calificacion";
+type Temperatura = "caliente" | "tibio" | "frio";
+
+interface Lead {
+  id: string;
+  nombre: string;
+  contacto: string;
+  canal: "Instagram" | "Facebook" | "WhatsApp" | "TikTok" | "Web";
+  etapa: EtapaCRM;
+  temperatura: Temperatura;
+  presupuesto: number;
+  invitados: number;
+  fecha: string;
+  tipoEvento: string;
+  tiempoRespuesta: number; // minutos
+  respondio: boolean;
+  notas: string;
+  creado: string;
+}
+
+const leadsIniciales: Lead[] = [
+  { id: "L-001", nombre: "Valeria Soto", contacto: "+52 55 1122 3344", canal: "Instagram", etapa: "calificacion", temperatura: "caliente", presupuesto: 85000, invitados: 80, fecha: "14 Feb 2026", tipoEvento: "Boda íntima", tiempoRespuesta: 4, respondio: true, notas: "Quiere terraza Sunset Lux, confirma en 48h.", creado: "Hace 2 días" },
+  { id: "L-002", nombre: "Andrés Beltrán", contacto: "andres@mail.com", canal: "WhatsApp", etapa: "calificacion", temperatura: "tibio", presupuesto: 42000, invitados: 40, fecha: "Marzo 2026", tipoEvento: "Cumpleaños", tiempoRespuesta: 12, respondio: true, notas: "Comparando 3 venues.", creado: "Hace 3 días" },
+  { id: "L-003", nombre: "Daniela Ortega", contacto: "@daniortega", canal: "TikTok", etapa: "interes", temperatura: "tibio", presupuesto: 0, invitados: 0, fecha: "—", tipoEvento: "Sesión de fotos", tiempoRespuesta: 9, respondio: true, notas: "Pidió catálogo completo.", creado: "Hoy" },
+  { id: "L-004", nombre: "Roberto Lima", contacto: "+52 33 9988 7766", canal: "Facebook", etapa: "interes", temperatura: "frio", presupuesto: 0, invitados: 0, fecha: "—", tipoEvento: "—", tiempoRespuesta: 45, respondio: false, notas: "No ha respondido segundo mensaje.", creado: "Hace 5 días" },
+  { id: "L-005", nombre: "Ximena Paredes", contacto: "@xime.paredes", canal: "Instagram", etapa: "descubrimiento", temperatura: "frio", presupuesto: 0, invitados: 0, fecha: "—", tipoEvento: "—", tiempoRespuesta: 0, respondio: false, notas: "Vio reel de Rooftop Premium.", creado: "Hoy" },
+  { id: "L-006", nombre: "Grupo Corp. Mendez", contacto: "compras@mendez.com", canal: "Web", etapa: "calificacion", temperatura: "caliente", presupuesto: 180000, invitados: 150, fecha: "20 Ene 2026", tipoEvento: "Evento corporativo", tiempoRespuesta: 3, respondio: true, notas: "Decisión esta semana.", creado: "Ayer" },
+  { id: "L-007", nombre: "Lucía Herrera", contacto: "+52 55 5544 7788", canal: "WhatsApp", etapa: "descubrimiento", temperatura: "tibio", presupuesto: 0, invitados: 0, fecha: "—", tipoEvento: "Aniversario", tiempoRespuesta: 0, respondio: false, notas: "Solicitó info inicial.", creado: "Hoy" },
+];
 
 type RolId = "superadmin" | "operaciones" | "finanzas" | "soporte" | "lectura";
 
