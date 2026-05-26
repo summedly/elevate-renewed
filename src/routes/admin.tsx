@@ -190,6 +190,7 @@ function AdminPage() {
             { id: "catalogo", label: "Catálogo" },
             { id: "roles", label: "Roles y usuarios" },
             { id: "redes", label: "Redes sociales" },
+            { id: "crm", label: "CRM" },
           ] as { id: Tab; label: string }[]).map((t) => (
             <button
               key={t.id}
@@ -218,6 +219,7 @@ function AdminPage() {
           />
         )}
         {tab === "redes" && <RedesSociales terrazas={terrazas} />}
+        {tab === "crm" && <CRM leads={leads} setLeads={setLeads} />}
       </main>
     </div>
   );
