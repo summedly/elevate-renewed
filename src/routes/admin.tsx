@@ -58,7 +58,7 @@ const terrazasIniciales: Terraza[] = [
   { id: 4, nombre: "Rooftop Premium CDMX", ubicacion: "Polanco, CDMX", precio: 6200, capacidad: 20, ocupacion: 88, ingresos: 163680, costos: 41000, rating: 5.0, activa: true, img: terraza3 },
 ];
 
-type Tab = "reservas" | "catalogo" | "roles" | "redes" | "crm" | "dashboard";
+type Tab = "reservas" | "catalogo" | "roles" | "redes" | "crm" | "campanas" | "dashboard";
 
 type EtapaCRM = "descubrimiento" | "interes" | "calificacion";
 type Temperatura = "caliente" | "tibio" | "frio";
@@ -191,6 +191,7 @@ function AdminPage() {
             { id: "roles", label: "Roles y usuarios" },
             { id: "redes", label: "Redes sociales" },
             { id: "crm", label: "CRM" },
+            { id: "campanas", label: "Campañas MKT" },
           ] as { id: Tab; label: string }[]).map((t) => (
             <button
               key={t.id}
@@ -220,6 +221,7 @@ function AdminPage() {
         )}
         {tab === "redes" && <RedesSociales terrazas={terrazas} />}
         {tab === "crm" && <CRM leads={leads} setLeads={setLeads} />}
+        {tab === "campanas" && <CampanasMKT />}
       </main>
     </div>
   );
@@ -1764,6 +1766,178 @@ function KPICrm({ label, value }: { label: string; value: string | number }) {
     <div className="rounded-lg border border-border bg-surface p-4">
       <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{label}</div>
       <div className="mt-2 font-serif text-2xl text-foreground">{value}</div>
+    </div>
+  );
+}
+
+/* ----------------------------- CAMPAÑAS MKT ----------------------------- */
+
+type CanalMKT = "Facebook" | "Instagram" | "WhatsApp" | "TikTok";
+type EstadoCampana = "activa" | "pausada" | "finalizada";
+
+interface Campana {
+  id: string;
+  nombre: string;
+  canal: CanalMKT;
+  estado: EstadoCampana;
+  inicio: string;
+  fin: string;
+  inversion: number;
+  ingresos: number;
+  alcance: number;
+  clics: number;
+  leads: number;
+  clientes: number;
+  kpiRoi: number; // ROI objetivo en %
+}
+
+const CANAL_COLOR: Record<CanalMKT, string> = {
+  Facebook: "bg-blue-100 text-blue-700 border-blue-200",
+  Instagram: "bg-pink-100 text-pink-700 border-pink-200",
+  WhatsApp: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  TikTok: "bg-neutral-900 text-white border-neutral-900",
+};
+
+const ESTADO_COLOR: Record<EstadoCampana, string> = {
+  activa: "bg-emerald-100 text-emerald-700",
+  pausada: "bg-amber-100 text-amber-700",
+  finalizada: "bg-neutral-200 text-neutral-700",
+};
+
+const CAMPANAS_INICIALES: Campana[] = [
+  { id: "c1", nombre: "Bodas Primavera", canal: "Instagram", estado: "activa", inicio: "01 Mar", fin: "31 May", inversion: 5000, ingresos: 15000, alcance: 48200, clics: 1820, leads: 64, clientes: 6, kpiRoi: 150 },
+  { id: "c2", nombre: "Lead Magnet WA", canal: "WhatsApp", estado: "activa", inicio: "15 Mar", fin: "15 Abr", inversion: 2500, ingresos: 9800, alcance: 12400, clics: 940, leads: 88, clientes: 5, kpiRoi: 200 },
+  { id: "c3", nombre: "Reels Terraza", canal: "TikTok", estado: "activa", inicio: "10 Abr", fin: "10 May", inversion: 3000, ingresos: 2200, alcance: 92000, clics: 2100, leads: 42, clientes: 1, kpiRoi: 150 },
+  { id: "c4", nombre: "Eventos Corporativos", canal: "Facebook", estado: "finalizada", inicio: "01 Feb", fin: "28 Feb", inversion: 6000, ingresos: 21000, alcance: 35000, clics: 1450, leads: 52, clientes: 7, kpiRoi: 150 },
+  { id: "c5", nombre: "XV Años Promo", canal: "Instagram", estado: "pausada", inicio: "01 Abr", fin: "30 Abr", inversion: 1800, ingresos: 900, alcance: 9800, clics: 420, leads: 14, clientes: 0, kpiRoi: 150 },
+];
+
+function CampanasMKT() {
+  const [campanas] = useState<Campana[]>(CAMPANAS_INICIALES);
+  const [filtro, setFiltro] = useState<"todas" | CanalMKT>("todas");
+
+  const lista = filtro === "todas" ? campanas : campanas.filter((c) => c.canal === filtro);
+
+  const totales = useMemo(() => {
+    const inv = lista.reduce((a, c) => a + c.inversion, 0);
+    const ing = lista.reduce((a, c) => a + c.ingresos, 0);
+    const leads = lista.reduce((a, c) => a + c.leads, 0);
+    const cli = lista.reduce((a, c) => a + c.clientes, 0);
+    const roi = inv ? Math.round(((ing - inv) / inv) * 100) : 0;
+    const conv = leads ? Math.round((cli / leads) * 100) : 0;
+    const cpl = leads ? Math.round(inv / leads) : 0;
+    const cac = cli ? Math.round(inv / cli) : 0;
+    return { inv, ing, leads, cli, roi, conv, cpl, cac, neto: ing - inv };
+  }, [lista]);
+
+  const canales: ("todas" | CanalMKT)[] = ["todas", "Facebook", "Instagram", "WhatsApp", "TikTok"];
+
+  return (
+    <div className="space-y-10">
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <h2 className="font-serif text-3xl text-foreground">Campañas MKT</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Mide el rendimiento de tus campañas en redes sociales y el retorno real de cada peso invertido.
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">ROI global</div>
+          <div className={`font-serif text-4xl ${totales.roi >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+            {totales.roi}%
+          </div>
+        </div>
+      </div>
+
+      {/* Filtros canal */}
+      <div className="flex flex-wrap gap-2">
+        {canales.map((c) => (
+          <button
+            key={c}
+            onClick={() => setFiltro(c)}
+            className={`rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-widest transition-colors ${
+              filtro === c ? "border-sand-700 bg-sand-700 text-white" : "border-border bg-card text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {c === "todas" ? "Todas" : c}
+          </button>
+        ))}
+      </div>
+
+      {/* KPIs globales */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KPICrm label="Inversión total" value={`$${totales.inv.toLocaleString()}`} />
+        <KPICrm label="Ingresos generados" value={`$${totales.ing.toLocaleString()}`} />
+        <KPICrm label="Retorno neto" value={`$${totales.neto.toLocaleString()}`} />
+        <KPICrm label="Conversión lead → cliente" value={`${totales.conv}%`} />
+        <KPICrm label="Leads generados" value={totales.leads} />
+        <KPICrm label="Clientes cerrados" value={totales.cli} />
+        <KPICrm label="Costo por lead (CPL)" value={`$${totales.cpl.toLocaleString()}`} />
+        <KPICrm label="Costo por cliente (CAC)" value={`$${totales.cac.toLocaleString()}`} />
+      </div>
+
+      {/* Tarjetas por campaña */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {lista.map((c) => {
+          const roi = c.inversion ? Math.round(((c.ingresos - c.inversion) / c.inversion) * 100) : 0;
+          const conv = c.leads ? Math.round((c.clientes / c.leads) * 100) : 0;
+          const ctr = c.alcance ? ((c.clics / c.alcance) * 100).toFixed(1) : "0";
+          const exito = roi >= c.kpiRoi;
+          return (
+            <div key={c.id} className="rounded-xl border border-border bg-card p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${CANAL_COLOR[c.canal]}`}>
+                      {c.canal}
+                    </span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${ESTADO_COLOR[c.estado]}`}>
+                      {c.estado}
+                    </span>
+                  </div>
+                  <h3 className="mt-2 font-serif text-xl text-foreground">{c.nombre}</h3>
+                  <p className="text-xs text-muted-foreground">{c.inicio} → {c.fin}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">ROI</div>
+                  <div className={`font-serif text-3xl ${roi >= c.kpiRoi ? "text-emerald-600" : roi >= 0 ? "text-amber-600" : "text-red-600"}`}>
+                    {roi}%
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">KPI: {c.kpiRoi}%</div>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                <Mini label="Inversión" value={`$${c.inversion.toLocaleString()}`} />
+                <Mini label="Ingresos" value={`$${c.ingresos.toLocaleString()}`} />
+                <Mini label="Retorno neto" value={`$${(c.ingresos - c.inversion).toLocaleString()}`} positive={c.ingresos - c.inversion >= 0} />
+                <Mini label="Conversión" value={`${conv}%`} />
+                <Mini label="Alcance" value={c.alcance.toLocaleString()} />
+                <Mini label="Clics (CTR)" value={`${c.clics.toLocaleString()} · ${ctr}%`} />
+                <Mini label="Leads" value={String(c.leads)} />
+                <Mini label="Clientes" value={String(c.clientes)} />
+              </div>
+
+              <div className={`mt-4 rounded-md px-3 py-2 text-xs font-semibold ${exito ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                {exito
+                  ? `✓ Campaña exitosa — superó el KPI de ${c.kpiRoi}% ROI`
+                  : `△ Por debajo del KPI (${c.kpiRoi}% ROI). Revisar segmentación o creatividad.`}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Mini({ label, value, positive }: { label: string; value: string; positive?: boolean }) {
+  return (
+    <div className="rounded-md border border-border bg-surface px-3 py-2">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className={`mt-0.5 font-semibold ${positive === false ? "text-red-600" : positive ? "text-emerald-600" : "text-foreground"}`}>
+        {value}
+      </div>
     </div>
   );
 }
