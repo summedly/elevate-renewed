@@ -263,10 +263,10 @@ function Dashboard({ terrazas, reservas }: { terrazas: Terraza[]; reservas: Rese
       </div>
 
       <div className="grid grid-cols-2 gap-px bg-border lg:grid-cols-4">
-        <KPICrm label="Ingresos" value={`$${stats.ingresos.toLocaleString()}`} hint="MXN · mes" />
-        <KPICrm label="Costos" value={`$${stats.costos.toLocaleString()}`} hint="MXN · mes" />
-        <KPICrm label="Margen neto" value={`$${stats.margen.toLocaleString()}`} hint={`${Math.round((stats.margen / stats.ingresos) * 100)}% sobre ingresos`} accent />
-        <KPICrm label="Ocupación promedio" value={`${stats.ocupacion}%`} hint={`${reservasConfirmadas} confirmadas · ${reservasPendientes} pendientes`} />
+        <KPI label="Ingresos" value={`$${stats.ingresos.toLocaleString()}`} hint="MXN · mes" />
+        <KPI label="Costos" value={`$${stats.costos.toLocaleString()}`} hint="MXN · mes" />
+        <KPI label="Margen neto" value={`$${stats.margen.toLocaleString()}`} hint={`${Math.round((stats.margen / stats.ingresos) * 100)}% sobre ingresos`} accent />
+        <KPI label="Ocupación promedio" value={`${stats.ocupacion}%`} hint={`${reservasConfirmadas} confirmadas · ${reservasPendientes} pendientes`} />
       </div>
 
       <section className="bg-card p-8 ring-1 ring-border lg:p-10">
