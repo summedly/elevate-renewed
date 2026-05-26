@@ -166,6 +166,7 @@ function AdminPage() {
   const [terrazas, setTerrazas] = useState<Terraza[]>(terrazasIniciales);
   const [roles, setRoles] = useState<Rol[]>(rolesIniciales);
   const [usuarios, setUsuarios] = useState<Usuario[]>(usuariosIniciales);
+  const [leads, setLeads] = useState<Lead[]>(leadsIniciales);
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
