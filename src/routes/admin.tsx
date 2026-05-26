@@ -221,6 +221,7 @@ function AdminPage() {
         )}
         {tab === "redes" && <RedesSociales terrazas={terrazas} />}
         {tab === "crm" && <CRM leads={leads} setLeads={setLeads} />}
+        {tab === "campanas" && <CampanasMKT />}
       </main>
     </div>
   );
